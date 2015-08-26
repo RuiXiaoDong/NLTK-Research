@@ -9,10 +9,12 @@ from nltk.corpus import brown, treebank
 from nltk.tag import untag, tnt, DefaultTagger, UnigramTagger, BigramTagger, TrigramTagger, brill, brill_trainer
 from nltk.corpus.reader import ChunkedCorpusReader
 
+#trainning data
 sent = treebank.sents()[0]
 brown_train_sents = brown.tagged_sents(categories='news')[1001:]
 brown_test_sents = brown.tagged_sents(categories='news')[:1000]
 
+#form multiple tagger in a tagging chain
 def backoff_tagger(tagged_sents, tagger_classes, backoff=None):
     if not backoff:
         backoff = tagger_classes[0](tagged_sents)
@@ -23,23 +25,6 @@ def backoff_tagger(tagged_sents, tagger_classes, backoff=None):
         backoff = tagger
  
     return backoff
-
-word_patterns = [
-    (r'^-?[0-9]+(.[0-9]+)?$', 'CD'),
-    (r'.*ould$', 'MD'),
-    (r'.*ing$', 'VBG'),
-    (r'.*ed$', 'VBD'),
-    (r'.*ness$', 'NN'),
-    (r'.*ment$', 'NN'),
-    (r'.*ful$', 'JJ'),
-    (r'.*ious$', 'JJ'),
-    (r'.*ble$', 'JJ'),
-    (r'.*ic$', 'JJ'),
-    (r'.*ive$', 'JJ'),
-    (r'.*ic$', 'JJ'),
-    (r'.*est$', 'JJ'),
-    (r'^a$', 'PREP'),
-]
 
 def train_brill_tagger(initial_tagger, train_sents, **kwargs):
     templates = [
@@ -70,9 +55,11 @@ defaultTagger = DefaultTagger('NN')
 initialTagger = backoff_tagger(brown_train_sents, [UnigramTagger, BigramTagger, TrigramTagger], backoff=defaultTagger)
 brillTagger = train_brill_tagger(initialTagger, brown_train_sents)
 
-backoff = DefaultTagger('NN')
-backofftaggers = backoff_tagger(brown_train_sents, [UnigramTagger, BigramTagger,
-TrigramTagger], backoff=backoff)
+tnt_tagger = tnt.TnT(N=100)
+tnt_tagger.train(brown_train_sents)
+
+bigramTagger = BigramTagger(brown_train_sents)
+trigramTagger = TrigramTagger(brown_train_sents)
 
 print("------------Recommended Tagger------------")
 print(nltk.pos_tag(sent))
@@ -80,30 +67,27 @@ print(nltk.pos_tag(sent))
 print("------------Default Tagger------------")
 print(defaultTagger.tag(sent))
 
-print("------------Trigram Tagger------------")
-tritagger = TrigramTagger(brown_train_sents)
-print(tritagger.tag(sent))
-    
-print("------------Unigram Tagger Untrained------------")
-unigramTagger = UnigramTagger(brown.tagged_sents(categories='news')[:1])
-print(unigramTagger.tag(sent))
-
 print("------------Unigram Tagger Overrode------------")
 unigramTagger = UnigramTagger(model={'Pierre': 'NN'})
-print(unigramTagger.tag(treebank.sents()[0]))
+print(unigramTagger.tag(sent))
 
 print("------------Unigram Tagger Trained------------")
+unigramTagger = UnigramTagger(brown_train_sents)
+print(unigramTagger.tag(sent))
+
 #cutoff: The number of instances of training data the tagger must see in order not to use the backoff tagger
+print("------------Unigram Tagger Trained with cutoff=3------------")
 unigramTagger = UnigramTagger(brown_train_sents, cutoff=3)
-print(unigramTagger.tag(treebank.sents()[0]))
+print(unigramTagger.tag(sent))
 
-print("------------Accuracy: Bigram Tagger Trained------------")
-bitagger = BigramTagger(brown_train_sents)
-print(bitagger.evaluate(brown_test_sents))
+print("------------Bigram Tagger------------")
+print(bigramTagger.tag(sent))
 
-print("------------Accuracy: Trigram Tagger Trained------------")
-tritagger = TrigramTagger(brown_train_sents)
-print(tritagger.evaluate(brown_test_sents))
+print("------------Trigram Tagger------------")
+print(trigramTagger.tag(sent))
+
+print("------------Brill Tagger------------")
+print(brillTagger.tag(sent))
 
 print("------------Accuracy: Unigram Tagger Trained------------")
 unigramTagger = UnigramTagger(brown_train_sents)
@@ -113,18 +97,22 @@ print("------------Accuracy: Unigram Tagger Trained with cutoff = 3------------"
 unigramTagger = UnigramTagger(brown_train_sents, cutoff = 3)
 print(unigramTagger.evaluate(brown_test_sents))
 
+print("------------Accuracy: Bigram Tagger Trained------------")
+print(bigramTagger.evaluate(brown_test_sents))
+
+print("------------Accuracy: Trigram Tagger Trained------------")
+print(trigramTagger.evaluate(brown_test_sents))
+
 print("------------Accuracy: Unigram Tagger with backoff enabled. Backoff Chain: UnigramTagger -> DefaultTagger------------")
 unigramTagger = UnigramTagger(brown_train_sents, backoff=defaultTagger)
 print(unigramTagger.evaluate(brown_test_sents))
 
-print("------------Accuracy: Tagger with backoff enabled. Backoff Chain: TrigramTagger -> BigramTagger -> UnigramTagger------------")
-print(backofftaggers.evaluate(brown_test_sents))
+print("------------Accuracy: Tagger with backoff enabled. Backoff Chain: TrigramTagger -> BigramTagger -> UnigramTagger -> DefaultTagger------------")
+print(initialTagger.evaluate(brown_test_sents))
 
 print("------------Accuracy: Brill Tagger------------")
 print(brillTagger.evaluate(brown_test_sents))
 print(brillTagger.rules())
 
 print("------------Accuracy: TnT Tagger------------")
-tnt_tagger = tnt.TnT(N=100)
-tnt_tagger.train(brown_train_sents)
 print(tnt_tagger.evaluate(brown_test_sents))

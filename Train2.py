@@ -19,6 +19,6 @@ class ChunkParser(nltk.ChunkParserI):
  
  
 from nltk.corpus import conll2000
-test_sents = conll2000.chunked_sents('test.txt', chunk_types=['NP'])
+test_sents = conll2000.chunked_sents('nltk_helper.txt', chunk_types=['NP'])
 train_sents = conll2000.chunked_sents('train.txt', chunk_types=['NP'])
 NPChunker = ChunkParser(train_sents)

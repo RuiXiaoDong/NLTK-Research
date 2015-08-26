@@ -22,7 +22,7 @@ poscutoff = int(len(posfeats)*3/4)
  
 trainfeats = negfeats[:negcutoff] + posfeats[:poscutoff]
 testfeats = negfeats[negcutoff:] + posfeats[poscutoff:]
-print('train on %d instances, test on %d instances' % (len(trainfeats), len(testfeats)))
+print('train on %d instances, nltk_helper on %d instances' % (len(trainfeats), len(testfeats)))
 
 classifier = NaiveBayesClassifier.train(trainfeats)
 print('accuracy:', nltk.classify.util.accuracy(classifier, testfeats))

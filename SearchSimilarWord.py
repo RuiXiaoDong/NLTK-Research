@@ -6,9 +6,6 @@ Created on Jun 22, 2015
 import nltk 
 from nltk.book import *
 
-print("-----raw content-----")
-print(text1)
-
 print("-----common context-----")
 print(text2.common_contexts(["monstrous", "very"]))
 

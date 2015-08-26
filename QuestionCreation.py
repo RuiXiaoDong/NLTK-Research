@@ -37,6 +37,7 @@ def extract_entity_names(t):
     return entity_names
 
 print("--------------Fill-in-the-Blank Question-------------")
+#for each entity, blank it out in its original sentense
 for idx,tree in enumerate(chunked_sentences):
     entity_names = extract_entity_names(tree)
     sentence = sentences[idx]
@@ -55,6 +56,7 @@ print(global_entity_names)
 print()
 
 print("--------------Multiple Choice Question-------------")
+#for each entity, try to find its synset from Wordnet
 for entity_name in global_entity_names:
     for wn_element in wn.synsets(entity_name):
         member_holonyms = wn_element.member_holonyms()
